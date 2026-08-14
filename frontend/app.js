@@ -147,8 +147,8 @@ async function generate() {
     }
 
     state.lastResult = data;
-    setLoading(false);
     await renderResult(data);
+    setLoading(false);
 
   } catch (err) {
     console.error('Generation failed:', err);
@@ -207,6 +207,11 @@ async function renderResult(data) {
 // ── Typewriter Effect ──────────────────────────────────────
 function typewriterReveal(element, text) {
   return new Promise(resolve => {
+    // Clear any existing typing timeout to prevent ghost characters
+    if (window.typingTimeoutId) {
+      clearTimeout(window.typingTimeoutId);
+    }
+
     element.textContent = '';
     element.classList.add('typing');
 
@@ -220,9 +225,10 @@ function typewriterReveal(element, text) {
         i++;
         const ch = chars[i - 1];
         const pause = /[.!?\n]/.test(ch) ? baseDelay * 6 : baseDelay;
-        setTimeout(type, pause);
+        window.typingTimeoutId = setTimeout(type, pause);
       } else {
         element.classList.remove('typing');
+        window.typingTimeoutId = null;
         resolve();
       }
     }

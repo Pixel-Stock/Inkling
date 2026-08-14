@@ -83,7 +83,7 @@ def build_prompt(name, theme, mood, fmt, length):
         f"You are Inkling, a brilliant creative author. Write beautifully crafted {fmt}s. "
         f"Structure: {structure}. Word budget: {word_budget}. "
         "Respond ONLY with a concise, evocative title of 2-5 words on line 1, "
-        "a blank line, then the COMPLETE piece — never cut it short, always write the full piece. No labels or quotes."
+        "a blank line, then the COMPLETE piece. Never cut it short abruptly; always write the full piece and end it gracefully with a concluding sentence. No labels or quotes."
     )
     name_phrase  = f"starring '{name}'" if name else "with an unnamed protagonist"
     theme_phrase = f"inspired by '{theme}'" if theme else "on the theme of everyday wonder"
@@ -99,7 +99,7 @@ def call_bedrock(body):
     length = "long"  if body.get("length") == "long"  else "short"
 
     system_prompt, user_prompt = build_prompt(name, theme, mood, fmt, length)
-    max_tokens = 2000 if length == "long" else 600
+    max_tokens = 3000 if length == "long" else 1000
 
     last_error = None
     for region, model_id in CANDIDATES:
