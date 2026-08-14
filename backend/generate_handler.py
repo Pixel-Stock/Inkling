@@ -26,7 +26,7 @@ logger.setLevel(logging.INFO)
 
 # ── Configuration (overridable via Lambda env vars) ──────────
 REGION     = os.environ.get("BEDROCK_REGION", "us-east-1")
-MODEL_ID   = os.environ.get("MODEL_ID", "amazon.nova-2-lite-v1:0")
+MODEL_ID   = os.environ.get("MODEL_ID", "us.amazon.nova-lite-v1:0")
 TABLE_NAME = os.environ.get("TABLE_NAME")          # unset until P1 gallery is built
 
 # ── AWS Clients (initialised outside handler for reuse) ──────
