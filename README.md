@@ -2,6 +2,8 @@
 
 **Inkling** is a cozy, literary workspace powered by Amazon Bedrock. Type a name, a theme, and a mood, and get back an original short poem or story written live by an AI model.
 
+**Live Demo:** [https://main.d2skrf9bjoodwf.amplifyapp.com/](https://main.d2skrf9bjoodwf.amplifyapp.com/)
+
 Created for the **AWS Builder Center Weekend Challenge: Build a Creative App**.
 
 ## Architecture
