@@ -149,7 +149,7 @@ def _response(status: int, payload: dict) -> dict:
 
 # ── Handler ───────────────────────────────────────────────────
 
-def handler(event: dict, context) -> dict:  # noqa: ANN001
+def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
     logger.info("Event method: %s", event.get("requestContext", {}).get("http", {}).get("method"))
 
     # ── Handle CORS pre-flight ────────────────────────────────
