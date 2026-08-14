@@ -209,18 +209,19 @@ def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
 
         except ClientError as exc:
             code = exc.response["Error"]["Code"]
+            msg = exc.response["Error"]["Message"]
             if code == "ThrottlingException" and attempt == 0:
                 logger.warning("Bedrock throttled; retrying after 1 s …")
                 time.sleep(1)
                 continue
             logger.error("Bedrock ClientError: %s", exc)
             return _response(502, {
-                "error": "Inkling got a little tongue-tied — try again?"
+                "error": f"Bedrock Error ({code}): {msg}"
             })
         except Exception as exc:  # noqa: BLE001
             logger.error("Unexpected Bedrock error: %s", exc)
             return _response(502, {
-                "error": "Inkling got a little tongue-tied — try again?"
+                "error": f"Unexpected Lambda Error: {str(exc)}"
             })
 
     if raw_text is None:
