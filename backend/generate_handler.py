@@ -187,12 +187,23 @@ def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
     # ── Build prompt ──────────────────────────────────────────
     system_prompt, user_prompt = build_prompt(name, theme, mood, fmt, length, tone, style, persp)
 
-    # ── Call Bedrock (with one retry on throttle) ─────────────
+    # ── Call Bedrock ─────────────────────────────
+    CANDIDATES = [
+        ("us-east-1",  "us.amazon.nova-lite-v1:0"),
+        ("us-east-1",  "amazon.nova-lite-v1:0"),
+        ("ap-south-1", "ap.amazon.nova-lite-v1:0"),
+        ("ap-south-1", "amazon.nova-lite-v1:0"),
+    ]
+
     raw_text = None
-    for attempt in range(2):
+    last_err = None
+    
+    for region, model_id in CANDIDATES:
         try:
-            result = bedrock.converse(
-                modelId=MODEL_ID,
+            logger.info("Trying region=%s model=%s", region, model_id)
+            client = boto3.client("bedrock-runtime", region_name=region)
+            result = client.converse(
+                modelId=model_id,
                 system=[{"text": system_prompt}],
                 messages=[{
                     "role":    "user",
@@ -205,27 +216,21 @@ def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
                 },
             )
             raw_text = result["output"]["message"]["content"][0]["text"].strip()
+            logger.info("SUCCESS with region=%s model=%s", region, model_id)
             break  # success — exit retry loop
-
         except ClientError as exc:
             code = exc.response["Error"]["Code"]
             msg = exc.response["Error"]["Message"]
-            if code == "ThrottlingException" and attempt == 0:
-                logger.warning("Bedrock throttled; retrying after 1 s …")
+            logger.warning("Bedrock ClientError (%s): %s", code, msg)
+            last_err = f"Bedrock Error ({code}): {msg}"
+            if code == "ThrottlingException":
                 time.sleep(1)
-                continue
-            logger.error("Bedrock ClientError: %s", exc)
-            return _response(502, {
-                "error": f"Bedrock Error ({code}): {msg}"
-            })
         except Exception as exc:  # noqa: BLE001
-            logger.error("Unexpected Bedrock error: %s", exc)
-            return _response(502, {
-                "error": f"Unexpected Lambda Error: {str(exc)}"
-            })
+            logger.warning("Unexpected Bedrock error: %s", exc)
+            last_err = f"Unexpected Lambda Error: {str(exc)}"
 
     if raw_text is None:
-        return _response(502, {"error": "Inkling got a little tongue-tied — try again?"})
+        return _response(502, {"error": last_err or "Inkling got a little tongue-tied — try again?"})
 
     # ── Parse title / body ────────────────────────────────────
     # Expected format: "<Title>\n\n<piece text>"
