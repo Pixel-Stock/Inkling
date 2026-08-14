@@ -83,7 +83,7 @@ function setupToggleGroup(selector, stateKey) {
   });
 }
 setupToggleGroup('#toggle-poem, #toggle-story', 'format');
-setupToggleGroup('#toggle-short, #toggle-medium', 'length');
+setupToggleGroup('#toggle-short, #toggle-long', 'length');
 
 // ── Form Submit ────────────────────────────────────────────
 form.addEventListener('submit', async (e) => {
@@ -185,7 +185,16 @@ async function renderResult(data) {
   
   resultTitle.textContent = data.title || 'Untitled';
   
-  await typewriterReveal(resultText, data.text || '');
+  let finalPiece = data.text || '';
+  if (actualFormat === 'story') {
+    if (state.length === 'short') {
+      finalPiece += '\n\nPerfect 2 minute story';
+    } else {
+      finalPiece += '\n\nPerfect ideation for the Special ones';
+    }
+  }
+  
+  await typewriterReveal(resultText, finalPiece);
 }
 
 // ── Typewriter Effect ──────────────────────────────────────

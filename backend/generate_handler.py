@@ -73,24 +73,44 @@ def parse_body(event: dict) -> dict:
 
 # ── Prompt builder ────────────────────────────────────────────
 
-def build_prompt(name: str, theme: str, mood: str, fmt: str, length: str) -> tuple[str, str]:
-    word_budget = "80–150 words" if length == "short" else "180–280 words"
+def build_prompt(name: str, theme: str, mood: str, fmt: str, length: str, tone: str, style: str, perspective: str) -> tuple[str, str]:
+    if fmt == "poem":
+        if length == "short":
+            structure = "a short poem consisting of exactly 2 stanzas"
+            word_budget = "around 60-100 words"
+        else:
+            structure = "a longer, immersive poem consisting of exactly 4 stanzas"
+            word_budget = "around 150-250 words"
+    else:
+        if length == "short":
+            structure = "a short story consisting of exactly 2-3 paragraphs"
+            word_budget = "around 150-200 words"
+        else:
+            structure = "a detailed, long story consisting of exactly 6-8 full paragraphs"
+            word_budget = "around 400-600 words"
 
     system_prompt = (
-        "You are Inkling, a warm and playful creative-writing companion. "
-        f"You write short, original {fmt}s that are family-friendly, positive, "
-        "and a little bit magical. Never include violence, hate, or adult content. "
-        f"Stay within {word_budget}. "
+        "You are Inkling, a brilliant, highly acclaimed, and deeply creative author. "
+        f"You write beautifully crafted {fmt}s that are family-friendly, positive, and evocative. "
+        f"The requested structure is: {structure}. You must adhere strictly to this length. "
+        f"Your word budget is {word_budget}. "
+        "Use vivid, striking imagery, rich vocabulary, and emotional depth to truly wow the reader. "
         "Always respond with ONLY a short, charming title on the very first line, "
-        "then a blank line, then the piece itself — nothing else, "
-        "no explanations, no labels, no quotation marks around the title."
+        "then a blank line, then the piece itself — nothing else. "
+        "Do not use quotation marks around the title."
     )
 
-    name_phrase  = f"starring or dedicated to '{name}'" if name else "with an unnamed protagonist"
-    theme_phrase = f"inspired by this theme: '{theme}'" if theme else "on the theme of everyday wonder"
+    name_phrase = f"starring or dedicated to '{name}'" if name else "with an unnamed protagonist"
+    theme_phrase = f"inspired by the theme: '{theme}'" if theme else "on the theme of everyday wonder"
+    
+    tone_str = f" in a {tone} tone" if tone else ""
+    style_str = f" in a {style} style" if style else ""
+    
+    persp_map = {"first": "first person (I/we)", "second": "second person (you)", "third": "third person (he/she/they)"}
+    persp_str = f" from a {persp_map.get(perspective, 'third person')} perspective" if perspective else ""
 
     user_prompt = (
-        f"Write a {mood} {fmt} {name_phrase}, {theme_phrase}."
+        f"Write a {mood} {fmt}{tone_str}{style_str}{persp_str}, {name_phrase}, {theme_phrase}."
     )
 
     return system_prompt, user_prompt
@@ -159,13 +179,16 @@ def handler(event: dict, context) -> dict:  # noqa: ANN001
     theme  = sanitize(body.get("theme"), 100) or "a rainy afternoon"
     mood   = body.get("mood") if body.get("mood") in VALID_MOODS else "whimsical"
     fmt    = "story" if body.get("format") == "story" else "poem"
-    length = "medium" if body.get("length") == "medium" else "short"
+    length = "long" if body.get("length") == "long" else "short"
+    tone   = body.get("tone", "")
+    style  = body.get("style", "")
+    persp  = body.get("perspective", "")
 
     logger.info("Generating %s | mood=%s | length=%s | name=%r | theme=%r",
                 fmt, mood, length, name[:20], theme[:40])
 
     # ── Build prompt ──────────────────────────────────────────
-    system_prompt, user_prompt = build_prompt(name, theme, mood, fmt, length)
+    system_prompt, user_prompt = build_prompt(name, theme, mood, fmt, length, tone, style, persp)
 
     # ── Call Bedrock (with one retry on throttle) ─────────────
     raw_text = None
@@ -179,7 +202,7 @@ def handler(event: dict, context) -> dict:  # noqa: ANN001
                     "content": [{"text": user_prompt}],
                 }],
                 inferenceConfig={
-                    "maxTokens":   500,
+                    "maxTokens":   1200 if length == "long" else 500,
                     "temperature": 0.95,
                     "topP":        0.9,
                 },
