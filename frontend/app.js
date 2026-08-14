@@ -6,7 +6,9 @@
 'use strict';
 
 // ── Configuration ──────────────────────────────────────────
-const API_URL = 'https://d5e2oo5egnkilx3dkq2qvvxa5a0kdppl.lambda-url.ap-south-1.on.aws/';
+const API_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000/generate'
+  : 'https://d5e2oo5egnkilx3dkq2qvvxa5a0kdppl.lambda-url.ap-south-1.on.aws/';
 
 
 // ── DOM References ──────────────────────────────────────────
@@ -133,7 +135,12 @@ async function generate() {
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (parseErr) {
+      throw new Error(`AWS Lambda crashed before running code (Status ${res.status}). Check Lambda Logs.`);
+    }
 
     if (!res.ok || data.error) {
       throw new Error(data.error || `Server error ${res.status}`);
