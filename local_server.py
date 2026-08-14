@@ -99,7 +99,7 @@ def call_bedrock(body):
     length = "long"  if body.get("length") == "long"  else "short"
 
     system_prompt, user_prompt = build_prompt(name, theme, mood, fmt, length)
-    max_tokens = 3000 if length == "long" else 1000
+    max_tokens = 5120 if length == "long" else 2000
 
     last_error = None
     for region, model_id in CANDIDATES:
@@ -110,7 +110,7 @@ def call_bedrock(body):
                 modelId=model_id,
                 system=[{"text": system_prompt}],
                 messages=[{"role": "user", "content": [{"text": user_prompt}]}],
-                inferenceConfig={"maxTokens": max_tokens, "temperature": 0.95, "topP": 0.9},
+                inferenceConfig={"maxTokens": max_tokens, "temperature": 0.7, "topP": 0.9},
             )
             raw = result["output"]["message"]["content"][0]["text"].strip()
             title, sep, piece = raw.partition("\n\n")

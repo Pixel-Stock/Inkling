@@ -210,8 +210,8 @@ def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
                     "content": [{"text": user_prompt}],
                 }],
                 inferenceConfig={
-                    "maxTokens":   3000 if length == "long" else 1000,
-                    "temperature": 0.95,
+                    "maxTokens":   5120 if length == "long" else 2000,
+                    "temperature": 0.7,
                     "topP":        0.9,
                 },
             )
