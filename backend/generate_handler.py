@@ -196,7 +196,7 @@ def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
     ]
 
     raw_text = None
-    last_err = None
+    all_errors = []
     
     for region, model_id in CANDIDATES:
         try:
@@ -222,15 +222,16 @@ def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
             code = exc.response["Error"]["Code"]
             msg = exc.response["Error"]["Message"]
             logger.warning("Bedrock ClientError (%s): %s", code, msg)
-            last_err = f"Bedrock Error ({code}): {msg}"
+            all_errors.append(f"{region}/{model_id} -> {code}: {msg}")
             if code == "ThrottlingException":
                 time.sleep(1)
         except Exception as exc:  # noqa: BLE001
             logger.warning("Unexpected Bedrock error: %s", exc)
-            last_err = f"Unexpected Lambda Error: {str(exc)}"
+            all_errors.append(f"{region}/{model_id} -> {type(exc).__name__}: {str(exc)}")
 
     if raw_text is None:
-        return _response(502, {"error": last_err or "Inkling got a little tongue-tied — try again?"})
+        err_msg = " | ".join(all_errors)
+        return _response(502, {"error": f"All models failed: {err_msg}"})
 
     # ── Parse title / body ────────────────────────────────────
     # Expected format: "<Title>\n\n<piece text>"
