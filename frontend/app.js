@@ -6,7 +6,8 @@
 'use strict';
 
 // ── Configuration ──────────────────────────────────────────
-const API_URL = 'http://localhost:3000/generate';
+const API_URL = 'https://d5e2oo5egnkilx3dkq2qvvxa5a0kdppl.lambda-url.ap-south-1.on.aws/';
+
 
 // ── DOM References ──────────────────────────────────────────
 const form         = document.getElementById('generator-form');
