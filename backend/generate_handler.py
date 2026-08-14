@@ -40,15 +40,10 @@ VALID_MOODS = {
     "mysterious", "funny", "romantic", "bittersweet",
 }
 
-# ── CORS headers (returned on every response, including errors) ──
-# Scope to your CloudFront/Amplify domain in production; '*' for local testing.
-CORS_ORIGIN = os.environ.get("CORS_ORIGIN", "*")
-
-CORS_HEADERS = {
-    "Content-Type":                 "application/json",
-    "Access-Control-Allow-Origin":  CORS_ORIGIN,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+# CORS is handled entirely by Lambda Function URL settings.
+# Do NOT add Access-Control-Allow-Origin here — it would duplicate the header.
+RESPONSE_HEADERS = {
+    "Content-Type": "application/json",
 }
 
 
@@ -147,7 +142,7 @@ def save_creation(item: dict, name: str, theme: str, mood: str) -> None:
 def _response(status: int, payload: dict) -> dict:
     return {
         "statusCode": status,
-        "headers":    CORS_HEADERS,
+        "headers":    RESPONSE_HEADERS,
         "body":       json.dumps(payload),
     }
 
@@ -158,6 +153,8 @@ def handler(event: dict, context) -> dict:  # noqa: ANN001
     logger.info("Event method: %s", event.get("requestContext", {}).get("http", {}).get("method"))
 
     # ── Handle CORS pre-flight ────────────────────────────────
+    # Lambda Function URL handles OPTIONS/CORS automatically.
+    # We only need to handle POST.
     method = (
         event.get("requestContext", {})
              .get("http", {})
@@ -165,7 +162,7 @@ def handler(event: dict, context) -> dict:  # noqa: ANN001
              .upper()
     )
     if method == "OPTIONS":
-        return _response(200, {"message": "OK"})
+        return {"statusCode": 200, "headers": RESPONSE_HEADERS, "body": ""}
 
     # ── Parse body ────────────────────────────────────────────
     try:
