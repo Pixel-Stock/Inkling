@@ -1,0 +1,16 @@
+{
+  "name": "inkling",
+  "version": "1.0.0",
+  "description": "Inkling — AI poem & story generator. Local dev server for frontend testing.",
+  "private": true,
+  "scripts": {
+    "start": "node dev-server.js",
+    "dev":   "node dev-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

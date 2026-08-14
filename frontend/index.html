@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- SEO -->
+  <title>Inkling — AI Poem &amp; Story Generator</title>
+  <meta name="description" content="Type a name, a theme, and a mood — get an original poem or short story written live by AI. Powered by Amazon Bedrock." />
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✦</text></svg>" />
+  
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Header (App Bar) -->
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">✦</span>
+        Inkling
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-ghost" id="new-creation-btn">+ New Creation</button>
+      </div>
+    </header>
+
+    <!-- Workspace -->
+    <main class="workspace">
+      
+      <!-- Left Pane: Controls -->
+      <section class="pane pane-left" aria-label="Creation controls">
+        <h2 class="section-title">Create</h2>
+        
+        <form id="generator-form" novalidate>
+          
+          <div class="form-group">
+            <label for="input-name">Name or dedicatee</label>
+            <input type="text" id="input-name" name="name" class="input-field" placeholder="e.g. Anya, a sleepy fox, yourself..." maxlength="80" autocomplete="off" spellcheck="false" />
+          </div>
+
+          <div class="form-group">
+            <label for="input-theme">Theme or topic</label>
+            <input type="text" id="input-theme" name="theme" class="input-field" placeholder="e.g. a rainy afternoon in a bookshop..." maxlength="120" autocomplete="off" spellcheck="false" />
+          </div>
+
+          <div class="form-group">
+            <label for="input-mood">Mood</label>
+            <div class="select-wrapper">
+              <select id="input-mood" name="mood" class="input-field">
+                <option value="whimsical" selected>Whimsical</option>
+                <option value="adventurous">Adventurous</option>
+                <option value="cozy">Cozy</option>
+                <option value="mysterious">Mysterious</option>
+                <option value="funny">Funny</option>
+                <option value="romantic">Romantic</option>
+                <option value="bittersweet">Bittersweet</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Format</label>
+            <div class="toggle-group" role="group">
+              <button type="button" id="toggle-poem" class="toggle-btn active" data-value="poem" aria-pressed="true">Poem</button>
+              <button type="button" id="toggle-story" class="toggle-btn" data-value="story" aria-pressed="false">Story</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Length</label>
+            <div class="toggle-group" role="group">
+              <button type="button" id="toggle-short" class="toggle-btn active" data-value="short" aria-pressed="true">Short</button>
+              <button type="button" id="toggle-medium" class="toggle-btn" data-value="medium" aria-pressed="false">Medium</button>
+            </div>
+          </div>
+
+          <details class="advanced-options">
+            <summary>More Options</summary>
+            <div class="advanced-options-content">
+              <div class="form-group">
+                <label for="input-tone">Tone</label>
+                <div class="select-wrapper">
+                  <select id="input-tone" name="tone" class="input-field">
+                    <option value="gentle" selected>Gentle</option>
+                    <option value="dramatic">Dramatic</option>
+                    <option value="playful">Playful</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="input-style">Style</label>
+                <div class="select-wrapper">
+                  <select id="input-style" name="style" class="input-field">
+                    <option value="lyrical" selected>Lyrical</option>
+                    <option value="modern">Modern</option>
+                    <option value="classic">Classic</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0">
+                <label for="input-perspective">Perspective</label>
+                <div class="select-wrapper">
+                  <select id="input-perspective" name="perspective" class="input-field">
+                    <option value="first" selected>First Person (I/We)</option>
+                    <option value="second">Second Person (You)</option>
+                    <option value="third">Third Person (He/She/They)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <button type="submit" id="generate-btn" class="create-btn">
+            <span class="btn-icon" aria-hidden="true">✦</span>
+            <span class="btn-text">Create</span>
+          </button>
+
+        </form>
+      </section>
+
+      <!-- Vertical Divider -->
+      <div class="pane-divider" aria-hidden="true"></div>
+
+      <!-- Right Pane: Reading Area -->
+      <section class="pane pane-right" aria-label="Generated work">
+        <div class="reading-container">
+          
+          <!-- Empty State -->
+          <div id="view-empty" class="view-state active state-centered">
+            <div class="state-icon" aria-hidden="true">✦</div>
+            <h2 class="state-title">Your next story<br>starts here.</h2>
+            <p class="state-desc">Choose a mood, a theme, and let Inkling begin.</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="view-loading" class="view-state state-centered">
+            <div class="state-icon" aria-hidden="true">✦</div>
+            <h2 class="state-title">Writing something for you...</h2>
+            <p class="state-desc" id="loading-text">Dipping the quill...</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="view-error" class="view-state state-centered">
+            <div class="state-icon" aria-hidden="true">✦</div>
+            <h2 class="state-title">Inkling got a little tongue-tied.</h2>
+            <div class="error-box">
+              <h3 id="error-message">Server error</h3>
+              <p id="error-hint">Check your connection and try again — the words are just shy.</p>
+              <button type="button" id="retry-btn">Try Again</button>
+            </div>
+          </div>
+
+          <!-- Result State -->
+          <div id="view-result" class="view-state">
+            <header class="result-header">
+              <div class="result-badge" id="result-metadata">Whimsical · Poem · Short</div>
+              <h2 class="result-title" id="result-title">Title</h2>
+              <hr class="result-divider" aria-hidden="true">
+            </header>
+            
+            <article class="result-body" id="result-text"></article>
+
+            <footer class="result-actions">
+              <button type="button" class="action-link" id="copy-btn">
+                <span aria-hidden="true">⧉</span> <span class="action-label">Copy</span>
+              </button>
+              <button type="button" class="action-link" id="speak-btn">
+                <span aria-hidden="true">🔊</span> <span class="action-label">Listen</span>
+              </button>
+              <button type="button" class="action-link" id="regenerate-btn">
+                <span aria-hidden="true">↻</span> <span class="action-label">Regenerate</span>
+              </button>
+            </footer>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
