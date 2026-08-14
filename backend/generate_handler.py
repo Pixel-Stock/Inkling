@@ -90,8 +90,8 @@ def build_prompt(name: str, theme: str, mood: str, fmt: str, length: str, tone: 
         f"The requested structure is: {structure}. You must adhere strictly to this length. "
         f"Your word budget is {word_budget}. "
         "Use vivid, striking imagery, rich vocabulary, and emotional depth to truly wow the reader. "
-        "Always respond with ONLY a short, charming title on the very first line, "
-        "then a blank line, then the piece itself — nothing else. "
+        "Always respond with ONLY a concise, evocative title of 2-5 words on the very first line, "
+        "then a blank line, then the COMPLETE piece itself — never cut it short, always write the full piece. "
         "Do not use quotation marks around the title."
     )
 
@@ -199,7 +199,7 @@ def lambda_handler(event: dict, context) -> dict:  # noqa: ANN001
                     "content": [{"text": user_prompt}],
                 }],
                 inferenceConfig={
-                    "maxTokens":   1200 if length == "long" else 500,
+                    "maxTokens":   2000 if length == "long" else 600,
                     "temperature": 0.95,
                     "topP":        0.9,
                 },
